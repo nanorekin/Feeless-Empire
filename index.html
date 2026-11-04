@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Feeless Empire — a free idle crypto empire game</title>
+<meta name="description" content="A free idle/incremental game: build a feeless block-processing empire, prestige for permanent bonuses, and keep earning while you're away. XNO themed, no installs." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg:#0b1220; --card:#121c30; --ink:#e7eefc; --muted:#93a3c0; --line:#24334f;
+    --accent:#4ea1ff; --accent-ink:#04101f; --field:#0e1729; --good:#4ade80; --bad:#ff6b6b; --gold:#fbbf24;
+    --xno:#26d6c7; --shard:#c084fc;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:"Sora",system-ui,sans-serif; min-height:100vh; padding-bottom:40px; }
+  a { color:inherit; }
+  button { font-family:inherit; }
+  .wrap { max-width:620px; margin:0 auto; padding:0 16px; }
+  header.hero { padding:30px 0 16px; text-align:center; border-bottom:1px solid var(--line); background:radial-gradient(60% 100% at 50% 0%, rgba(78,161,255,0.14), transparent); }
+  header.hero h1 { margin:0 0 6px; font-size:clamp(1.6rem, 5vw, 2.2rem); font-weight:800; letter-spacing:-0.02em; }
+  header.hero .accentword { color:var(--accent); }
+  header.hero p { margin:0 auto; max-width:480px; color:var(--muted); font-size:0.9rem; line-height:1.5; }
+
+  .topbar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:16px; }
+  .pill { font:700 0.82rem "JetBrains Mono",monospace; background:var(--field); border:1px solid var(--line); border-radius:999px; padding:7px 14px; color:var(--shard); }
+  .btn2 { font:600 0.82rem "Sora",sans-serif; padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:var(--field); color:var(--ink); cursor:pointer; text-decoration:none; }
+  .btn2:hover { border-color:var(--accent); }
+  .btn2.primary { border-color:var(--gold); color:var(--gold); }
+
+  .stats { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:18px 0; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 16px; text-align:center; min-width:110px; }
+  .stat .v { font:800 1.05rem "JetBrains Mono",monospace; color:var(--ink); }
+  .stat .l { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-top:2px; }
+
+  .click-zone { text-align:center; margin:18px 0 10px; }
+  #click-btn {
+    width:150px; height:150px; border-radius:50%; border:3px solid var(--accent); background:radial-gradient(circle at 35% 30%, rgba(78,161,255,0.35), var(--field));
+    color:var(--ink); font-size:2.6rem; cursor:pointer; user-select:none; transition:transform .08s;
+  }
+  #click-btn:active { transform:scale(0.93); }
+  .click-label { color:var(--muted); font-size:0.8rem; margin-top:8px; }
+
+  .modetabs { display:flex; gap:8px; justify-content:center; margin:22px 0 0; }
+  .modetab { font:700 0.82rem "Sora",sans-serif; padding:9px 16px; border-radius:10px 10px 0 0; border:1px solid var(--line); border-bottom:none; background:var(--field); color:var(--muted); cursor:pointer; }
+  .modetab.active { background:var(--card); color:var(--ink); }
+  .modepanel { display:none; background:var(--card); border:1px solid var(--line); border-radius:0 14px 14px 14px; padding:18px; margin-top:-1px; }
+  .modepanel.active { display:block; }
+
+  .gen-row { display:flex; align-items:center; gap:10px; background:var(--field); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+  .gen-row .glyph { font-size:1.5rem; width:34px; text-align:center; flex-shrink:0; }
+  .gen-row .info { flex:1; min-width:0; }
+  .gen-row .name { font-weight:700; font-size:0.86rem; }
+  .gen-row .sub { color:var(--muted); font-size:0.72rem; margin-top:1px; }
+  .gen-row .buy { display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; }
+  .gen-row button { padding:8px 11px; border-radius:9px; border:1px solid var(--accent); background:transparent; color:var(--accent); font:700 0.76rem "JetBrains Mono",monospace; cursor:pointer; white-space:nowrap; }
+  .gen-row button:disabled { opacity:0.35; cursor:default; border-color:var(--line); color:var(--muted); }
+  .buymode { display:flex; gap:6px; justify-content:center; margin-bottom:12px; }
+  .buymode button { padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--field); color:var(--muted); font:700 0.74rem "Sora",sans-serif; cursor:pointer; }
+  .buymode button.active { border-color:var(--gold); color:var(--gold); }
+
+  .prestige-box { text-align:center; padding:14px; }
+  .prestige-box .big { font:800 1.3rem "JetBrains Mono",monospace; color:var(--shard); margin:8px 0; }
+  #prestige-btn { width:100%; padding:13px; border-radius:11px; border:1px solid var(--shard); background:transparent; color:var(--shard); font:800 0.9rem "Sora",sans-serif; cursor:pointer; }
+  #prestige-btn:disabled { opacity:0.4; cursor:default; }
+  .confirm-row { display:flex; gap:8px; margin-top:10px; }
+  .confirm-row button { flex:1; padding:11px; border-radius:10px; font:700 0.85rem "Sora",sans-serif; cursor:pointer; }
+  .confirm-row .yes { border:1px solid var(--shard); background:var(--shard); color:#1a0b2e; }
+  .confirm-row .no { border:1px solid var(--line); background:var(--field); color:var(--ink); }
+
+  .research-item { display:flex; align-items:center; gap:10px; background:var(--field); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; }
+  .research-item .info { flex:1; }
+  .research-item .name { font-weight:700; font-size:0.9rem; }
+  .research-item .desc { color:var(--muted); font-size:0.76rem; margin-top:2px; }
+  .research-item .lvl { font:700 0.74rem "JetBrains Mono",monospace; color:var(--shard); }
+  .research-item button { padding:9px 12px; border-radius:9px; border:1px solid var(--shard); background:transparent; color:var(--shard); font:700 0.78rem "Sora",sans-serif; cursor:pointer; white-space:nowrap; }
+  .research-item button:disabled { opacity:0.35; cursor:default; }
+
+  details.rules { width:100%; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:4px 16px; margin-top:22px; }
+  details.rules summary { cursor:pointer; padding:12px 0; font-weight:700; font-size:0.9rem; }
+  details.rules p { color:var(--muted); font-size:0.82rem; line-height:1.6; }
+  details.rules b { color:var(--ink); }
+
+  .card2 { margin:28px auto 0; max-width:620px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; }
+  .card2 h2 { margin:0 0 4px; font-size:1.1rem; text-align:center; }
+  .card2 > p.sub { text-align:center; color:var(--muted); font-size:0.85rem; margin:0 0 16px; }
+  .amounts { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
+  .amounts button { padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:var(--field); color:var(--ink); font:600 0.82rem "Sora",sans-serif; cursor:pointer; }
+  .amounts button[aria-pressed="true"] { border-color:var(--xno); color:var(--xno); }
+  .tipgrid { display:flex; gap:18px; flex-wrap:wrap; align-items:center; justify-content:center; }
+  .qr { width:148px; height:148px; background:#fff; border-radius:10px; padding:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .tipright { flex:1; min-width:220px; display:flex; flex-direction:column; gap:8px; }
+  .addr { font:600 0.7rem "JetBrains Mono",monospace; color:var(--muted); word-break:break-all; background:var(--field); border:1px solid var(--line); border-radius:10px; padding:8px 10px; }
+  .tiprow { display:flex; gap:8px; flex-wrap:wrap; }
+  .tiprow button, .tiprow a { padding:9px 14px; border-radius:9px; border:1px solid var(--line); background:var(--field); color:var(--ink); font:600 0.8rem "Sora",sans-serif; cursor:pointer; text-decoration:none; }
+  .status { min-height:18px; font-size:0.78rem; color:var(--good); }
+  .hint { color:var(--muted); font-size:0.76rem; margin:0; line-height:1.4; }
+
+  .end-overlay { position:fixed; inset:0; background:rgba(5,8,15,0.88); display:flex; align-items:center; justify-content:center; z-index:30; padding:16px; }
+  .end-overlay[hidden] { display:none; }
+  .end-card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:26px 22px; max-width:360px; text-align:center; }
+  .end-card h2 { margin:0 0 8px; }
+  .end-card p { color:var(--muted); font-size:0.88rem; line-height:1.5; }
+  .end-card .shards { font:800 1.4rem "JetBrains Mono",monospace; color:var(--shard); margin:10px 0; }
+
+  footer { text-align:center; color:var(--muted); font-size:0.78rem; margin-top:40px; padding:0 16px; }
+  footer a { color:var(--gold); text-decoration:none; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Feeless <span class="accentword">Empire</span></h1>
+    <p>Build a block-processing empire that earns even while your browser's closed. Fork the chain to cash in permanent bonuses and go again, bigger.</p>
+    <div class="topbar">
+      <div class="pill">🔮 <span id="shards-top">0</span> genesis shards</div>
+      <a class="btn2" href="#tip">Get more shards</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="v" id="stat-blocks">0</div><div class="l">Blocks</div></div>
+    <div class="stat"><div class="v" id="stat-bps">0/s</div><div class="l">Per second</div></div>
+    <div class="stat"><div class="v" id="stat-mult">×1.00</div><div class="l">Multiplier</div></div>
+    <div class="stat"><div class="v" id="stat-lifetime">0</div><div class="l">Lifetime</div></div>
+  </div>
+
+  <div class="click-zone">
+    <button id="click-btn">⛏️</button>
+    <div class="click-label">Process a transaction — tap for <b id="click-power">1</b> blocks</div>
+  </div>
+
+  <nav class="modetabs" role="tablist">
+    <button class="modetab active" data-panel="panel-gens" type="button">🏗️ Build</button>
+    <button class="modetab" data-panel="panel-prestige" type="button">🔱 Fork</button>
+    <button class="modetab" data-panel="panel-research" type="button">🧪 Research</button>
+  </nav>
+
+  <section class="modepanel active" id="panel-gens">
+    <div class="buymode">
+      <button data-n="1" class="active">Buy ×1</button>
+      <button data-n="10">Buy ×10</button>
+      <button data-n="max">Buy Max</button>
+    </div>
+    <div id="gen-list"></div>
+  </section>
+
+  <section class="modepanel" id="panel-prestige">
+    <div class="prestige-box">
+      <p class="hint">Forking the chain resets your blocks and generators back to zero — but converts everything you've earned this run into permanent <b>Genesis Shards</b>, each worth +2% production, forever.</p>
+      <div class="big" id="prestige-preview">+0 shards</div>
+      <button id="prestige-btn">🔱 Fork the chain</button>
+      <div class="confirm-row" id="prestige-confirm" hidden>
+        <button class="yes" id="prestige-yes">Confirm fork</button>
+        <button class="no" id="prestige-no">Cancel</button>
+      </div>
+      <p class="hint" id="prestige-hint" style="margin-top:10px;"></p>
+    </div>
+  </section>
+
+  <section class="modepanel" id="panel-research">
+    <p class="hint">Genesis Shards buy permanent research here too — these apply forever, through every future fork.</p>
+    <div id="research-list"></div>
+  </section>
+
+  <details class="rules">
+    <summary>❓ How to play</summary>
+    <p>Tap the pickaxe to process transactions by hand, or spend blocks to buy generators that process them
+      automatically, every second, forever — each one you own gets a little more expensive to replicate, so variety
+      beats stacking just one kind. Once you've built up a solid rate, open the <b>Fork</b> tab: resetting your
+      blocks and generators converts your progress into permanent <b>Genesis Shards</b>, each worth a lasting +2%
+      to all future production. Spend shards in <b>Research</b> on upgrades that stick around through every future
+      fork too — more click power, a longer offline-earnings window, a head start after forking, and more. Blocks
+      keep accumulating at your current rate even while the tab or browser is closed, up to your offline cap, so
+      checking back after a break is always worth it. Nothing here has any cash value — it's a number-go-up game,
+      not a wallet.</p>
+  </details>
+
+  <aside class="card2" id="tip" aria-label="Tip to top up shards">
+    <h2>Get more shards</h2>
+    <p class="sub">Shards come from forking the chain — tipping is just an optional way to speed that up, or say thanks.</p>
+    <div class="amounts" role="group" aria-label="Amount">
+      <button type="button" data-amt="0.01" aria-pressed="true">0.01 XNO</button>
+      <button type="button" data-amt="0.05" aria-pressed="false">0.05 XNO</button>
+      <button type="button" data-amt="0.1" aria-pressed="false">0.1 XNO</button>
+      <button type="button" data-amt="" aria-pressed="false">Any amount</button>
+    </div>
+    <div class="tipgrid">
+      <div class="qr" id="qr"></div>
+      <div class="tipright">
+        <a class="tiprow btn" id="openw" href="#" style="justify-content:center;">Open in wallet</a>
+        <div class="addr" id="addr"></div>
+        <div class="tiprow">
+          <button type="button" id="copy">Copy address</button>
+          <button type="button" id="check">I've sent it, check</button>
+        </div>
+        <div class="status" id="tstatus" role="status"></div>
+        <p class="hint" id="thint"></p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="end-overlay" id="welcome-overlay" hidden>
+  <div class="end-card">
+    <h2>Welcome back</h2>
+    <p id="welcome-text"></p>
+    <button class="btn2 primary" id="welcome-close" style="width:100%;padding:11px;margin-top:6px;">Continue</button>
+  </div>
+</div>
+
+<footer>
+  Feeless Empire &middot; part of the Feeless Arcade &middot; every number lives only in your browser
+</footer>
+
+<script>
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function lsGet(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
+  function jget(k, d) { try { const v = JSON.parse(lsGet(k, "")); return v === null || v === undefined ? d : v; } catch (e) { return d; } }
+  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
+  const NANO_ADDRESS = "nano_3a7e3irpbpxbh1n7dk9u3cm9tnd97q1unjxn67ni9gijoxfmzguitx1xgc9u";
+  const RPCS = ["https://rpc.nano.to", "https://node.somenano.com/proxy"];
+  const SHARDS_PER_XNO = 15;
+
+  const SUFFIXES = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd"];
+  function formatNum(n) {
+    n = Math.max(0, n);
+    if (n < 1000) return (Number.isInteger(n) ? n : n.toFixed(1)).toString();
+    let tier = Math.floor(Math.log10(n) / 3);
+    tier = clamp(tier, 0, SUFFIXES.length - 1);
+    const scaled = n / Math.pow(1000, tier);
+    return scaled.toFixed(scaled < 10 ? 2 : scaled < 100 ? 1 : 0) + SUFFIXES[tier];
+  }
+
+  const GENERATORS = [
+    { id: "manual", name: "Hand Wallet Node", glyph: "📱", baseCost: 15, baseProd: 0.1 },
+    { id: "asic", name: "ASIC Rig", glyph: "⚙️", baseCost: 100, baseProd: 1 },
+    { id: "farm", name: "Rig Farm", glyph: "🏚️", baseCost: 1100, baseProd: 8 },
+    { id: "pool", name: "Mining Pool", glyph: "🏭", baseCost: 12000, baseProd: 47 },
+    { id: "dc", name: "Data Center", glyph: "🏢", baseCost: 130000, baseProd: 260 },
+    { id: "validator", name: "Validator Cluster", glyph: "🛰️", baseCost: 1400000, baseProd: 1400 },
+    { id: "ledger", name: "Global Ledger Array", glyph: "🌐", baseCost: 20000000, baseProd: 7800 },
+    { id: "quantum", name: "Quantum Node", glyph: "🔮", baseCost: 330000000, baseProd: 44000 }
+  ];
+  const COST_GROWTH = 1.15;
+
+  const RESEARCH = [
+    { id: "eff", name: "Efficient Nodes", desc: "+10% global production per level", max: 20, baseCost: 3 },
+    { id: "click", name: "Fast Fingers", desc: "+1 click power per level", max: 15, baseCost: 2 },
+    { id: "cold", name: "Cold Storage", desc: "+2h offline-earnings cap per level", max: 4, baseCost: 5 },
+    { id: "genesis", name: "Genesis Boost", desc: "Start each fork with a head start in blocks", max: 5, baseCost: 8 }
+  ];
+
+  // ---------- state ----------
+  let blocks = parseFloat(lsGet("fe-blocks", "0")) || 0;
+  let lifetime = parseFloat(lsGet("fe-lifetime", "0")) || 0;
+  let shards = parseFloat(lsGet("fe-shards", "0")) || 0;
+  const owned = {}; GENERATORS.forEach(function (g) { owned[g.id] = parseInt(lsGet("fe-owned-" + g.id, "0"), 10) || 0; });
+  const research = {}; RESEARCH.forEach(function (r) { research[r.id] = parseInt(lsGet("fe-research-" + r.id, "0"), 10) || 0; });
+  let buyMode = "1";
+
+  function researchLevel(id) { return research[id] || 0; }
+  function researchCost(def, level) { return Math.round(def.baseCost * Math.pow(1.6, level)); }
+
+  function globalMult() { return (1 + shards * 0.02) * (1 + researchLevel("eff") * 0.1); }
+  function clickPower() { return 1 + researchLevel("click"); }
+  function offlineCapHours() { return 4 + researchLevel("cold") * 2; }
+  function genesisHeadStart() { return researchLevel("genesis") * 500; }
+
+  function costFor(gen, n) {
+    n = n === undefined ? owned[gen.id] : n;
+    return Math.ceil(gen.baseCost * Math.pow(COST_GROWTH, n));
+  }
+  function totalCostForQty(gen, qty) {
+    let total = 0, n = owned[gen.id];
+    for (let i = 0; i < qty; i++) { total += costFor(gen, n); n++; }
+    return total;
+  }
+  function maxAffordable(gen) {
+    let n = owned[gen.id], total = 0, count = 0;
+    while (true) {
+      const c = costFor(gen, n);
+      if (total + c > blocks) break;
+      total += c; n++; count++;
+      if (count > 100000) break;
+    }
+    return { count: count, cost: total };
+  }
+
+  function prodPerSec() {
+    let total = 0;
+    GENERATORS.forEach(function (g) { total += g.baseProd * owned[g.id]; });
+    return total * globalMult();
+  }
+
+  function addBlocks(n) { blocks += n; lifetime += Math.max(0, n); }
+
+  function save() {
+    lsSet("fe-blocks", blocks); lsSet("fe-lifetime", lifetime); lsSet("fe-shards", shards);
+    GENERATORS.forEach(function (g) { lsSet("fe-owned-" + g.id, owned[g.id]); });
+    RESEARCH.forEach(function (r) { lsSet("fe-research-" + r.id, research[r.id]); });
+    lsSet("fe-lastseen", Date.now());
+  }
+
+  // ---------- offline progress ----------
+  function applyOfflineProgress() {
+    const last = parseInt(lsGet("fe-lastseen", "0"), 10);
+    if (!last) { lsSet("fe-lastseen", Date.now()); return; }
+    const elapsedMs = Date.now() - last;
+    if (elapsedMs < 30000) return; // not worth a popup for a quick tab switch
+    const capMs = offlineCapHours() * 3600 * 1000;
+    const effectiveMs = Math.min(elapsedMs, capMs);
+    const rate = prodPerSec();
+    if (rate <= 0) return;
+    const earned = rate * (effectiveMs / 1000);
+    if (earned <= 0) return;
+    addBlocks(earned);
+    const cappedNote = elapsedMs > capMs ? " (capped at your " + offlineCapHours() + "h offline limit)" : "";
+    $("welcome-text").textContent = "While you were away, your empire processed " + formatNum(earned) + " blocks" + cappedNote + ".";
+    $("welcome-overlay").hidden = false;
+  }
+  $("welcome-close").addEventListener("click", function () { $("welcome-overlay").hidden = true; });
+
+  // ---------- rendering ----------
+  function renderTop() {
+    $("shards-top").textContent = formatNum(shards);
+    $("stat-blocks").textContent = formatNum(blocks);
+    $("stat-bps").textContent = formatNum(prodPerSec()) + "/s";
+    $("stat-mult").textContent = "×" + globalMult().toFixed(2);
+    $("stat-lifetime").textContent = formatNum(lifetime);
+    $("click-power").textContent = formatNum(clickPower());
+  }
+
+  function renderGenerators() {
+    const box = $("gen-list"); box.innerHTML = "";
+    GENERATORS.forEach(function (g) {
+      const n = owned[g.id];
+      let qty, cost;
+      if (buyMode === "max") { const m = maxAffordable(g); qty = Math.max(1, m.count); cost = m.count > 0 ? m.cost : costFor(g, n); }
+      else { qty = parseInt(buyMode, 10); cost = totalCostForQty(g, qty); }
+      const afford = buyMode === "max" ? maxAffordable(g).count > 0 : blocks >= cost;
+      const row = document.createElement("div"); row.className = "gen-row";
+      row.innerHTML =
+        '<div class="glyph">' + g.glyph + '</div>' +
+        '<div class="info"><div class="name">' + g.name + ' <span style="color:var(--muted);font-weight:400;">×' + n + '</span></div>' +
+        '<div class="sub">' + formatNum(g.baseProd * globalMult()) + ' blocks/s each</div></div>' +
+        '<div class="buy"><button' + (afford ? "" : " disabled") + '>' + (buyMode === "max" ? "Max (" + qty + ")" : "×" + qty) + '<br>' + formatNum(cost) + '</button></div>';
+      row.querySelector("button").addEventListener("click", function () {
+        let q = qty, c = cost;
+        if (buyMode === "max") { const m = maxAffordable(g); q = m.count; c = m.cost; if (q <= 0) return; }
+        if (blocks < c || q <= 0) return;
+        blocks -= c; owned[g.id] += q;
+        renderAll();
+      });
+      box.appendChild(row);
+    });
+  }
+
+  function renderResearch() {
+    const box = $("research-list"); box.innerHTML = "";
+    RESEARCH.forEach(function (r) {
+      const lvl = researchLevel(r.id), maxed = lvl >= r.max;
+      const cost = maxed ? 0 : researchCost(r, lvl);
+      const row = document.createElement("div"); row.className = "research-item";
+      row.innerHTML =
+        '<div class="info"><div class="name">' + r.name + '</div><div class="desc">' + r.desc + '</div>' +
+        '<div class="lvl">Level ' + lvl + ' / ' + r.max + '</div></div>' +
+        '<button' + (maxed || shards < cost ? ' disabled' : '') + '>' + (maxed ? "Maxed" : formatNum(cost) + " 🔮") + '</button>';
+      row.querySelector("button").addEventListener("click", function () {
+        const cur = researchLevel(r.id); if (cur >= r.max || shards < researchCost(r, cur)) return;
+        shards -= researchCost(r, cur); research[r.id] = cur + 1;
+        renderAll();
+      });
+      box.appendChild(row);
+    });
+  }
+
+  function prestigeGain() {
+    if (lifetime < 1e5) return 0;
+    return Math.floor(10 * Math.sqrt(lifetime / 1e6));
+  }
+  function renderPrestige() {
+    const gain = prestigeGain();
+    $("prestige-preview").textContent = "+" + formatNum(gain) + " shards";
+    $("prestige-btn").disabled = gain <= 0;
+    $("prestige-hint").textContent = gain > 0
+      ? "Based on " + formatNum(lifetime) + " lifetime blocks this run."
+      : "Earn at least 100K lifetime blocks this run before forking is worth it.";
+  }
+
+  function renderAll() { renderTop(); renderGenerators(); renderResearch(); renderPrestige(); save(); }
+
+  // ---------- interactions ----------
+  $("click-btn").addEventListener("click", function () { addBlocks(clickPower()); renderAll(); });
+
+  document.querySelectorAll(".buymode button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".buymode button").forEach(function (o) { o.classList.remove("active"); });
+      b.classList.add("active"); buyMode = b.dataset.n; renderGenerators();
+    });
+  });
+
+  document.querySelectorAll(".modetab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      document.querySelectorAll(".modetab").forEach(function (o) { o.classList.remove("active"); });
+      document.querySelectorAll(".modepanel").forEach(function (o) { o.classList.remove("active"); });
+      t.classList.add("active"); $(t.dataset.panel).classList.add("active");
+    });
+  });
+
+  $("prestige-btn").addEventListener("click", function () {
+    if ($("prestige-btn").disabled) return;
+    $("prestige-confirm").hidden = false; $("prestige-btn").hidden = true;
+  });
+  $("prestige-no").addEventListener("click", function () { $("prestige-confirm").hidden = true; $("prestige-btn").hidden = false; });
+  $("prestige-yes").addEventListener("click", function () {
+    const gain = prestigeGain(); if (gain <= 0) return;
+    shards += gain;
+    blocks = genesisHeadStart(); lifetime = 0;
+    GENERATORS.forEach(function (g) { owned[g.id] = 0; });
+    $("prestige-confirm").hidden = true; $("prestige-btn").hidden = false;
+    renderAll();
+  });
+
+  // ---------- idle tick ----------
+  let lastTick = Date.now();
+  setInterval(function () {
+    const now = Date.now(), dt = Math.min(2, (now - lastTick) / 1000); lastTick = now;
+    addBlocks(prodPerSec() * dt);
+    renderTop(); renderGenerators();
+  }, 200);
+  setInterval(save, 5000);
+  window.addEventListener("beforeunload", save);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) save(); });
+
+  // ---------- selftest hooks ----------
+  if (/[?&]selftest/.test(location.search)) {
+    window.__fe = {
+      get blocks() { return blocks; }, get lifetime() { return lifetime; }, get shards() { return shards; },
+      get owned() { return owned; }, get research() { return research; },
+      addBlocks: function (n) { addBlocks(n); renderAll(); },
+      setBlocks: function (n) { blocks = n; renderAll(); },
+      setLifetime: function (n) { lifetime = n; renderAll(); },
+      setShards: function (n) { shards = n; renderAll(); },
+      buyMax: function (id) { const g = GENERATORS.find(function (x) { return x.id === id; }); const m = maxAffordable(g); blocks -= m.cost; owned[g.id] += m.count; renderAll(); return m; },
+      setOwned: function (id, n) { owned[id] = n; renderAll(); },
+      prestigeGain: prestigeGain,
+      doPrestige: function () { $("prestige-yes").click(); },
+      formatNum: formatNum,
+      prodPerSec: prodPerSec,
+      setLastSeen: function (msAgo) { lsSet("fe-lastseen", Date.now() - msAgo); },
+      applyOfflineProgress: applyOfflineProgress,
+      researchCost: function (id) { const r = RESEARCH.find(function (x) { return x.id === id; }); return researchCost(r, researchLevel(id)); },
+      buyResearchMax: function (id) {
+        const r = RESEARCH.find(function (x) { return x.id === id; });
+        while (researchLevel(id) < r.max && shards >= researchCost(r, researchLevel(id))) { shards -= researchCost(r, researchLevel(id)); research[id]++; }
+        renderAll();
+      }
+    };
+  }
+
+  // ---------- tip card (reused pattern) ----------
+  let tipAmt = "0.01", qr = null, checking = false;
+  function toRaw(xno) { const parts = xno.split("."), frac = ((parts[1] || "") + "000000000000000000000000000000").slice(0, 30); return (BigInt(parts[0]) * 10n ** 30n + BigInt(frac)).toString(); }
+  function uriFor(a) { return "nano:" + NANO_ADDRESS + (a ? "?amount=" + toRaw(a) : ""); }
+  function setPending() { if (tipAmt) lsSet("fe-tip", JSON.stringify({ amt: tipAmt, ts: Date.now() })); }
+  function renderTip() {
+    $("addr").textContent = NANO_ADDRESS;
+    const uri = uriFor(tipAmt);
+    $("openw").href = uri; $("check").hidden = !tipAmt;
+    $("thint").textContent = tipAmt
+      ? "On a phone, tap Open in wallet. On a computer, scan the code with your Nano wallet. Then press the check button to credit " + Math.round(parseFloat(tipAmt) * SHARDS_PER_XNO) + " genesis shards."
+      : "Any amount is welcome. Tips sent this way can't be checked automatically, so shards aren't credited for them — pick a listed amount above if you'd like the top-up.";
+    try {
+      if (typeof QRCode === "undefined") throw new Error("no qr");
+      if (!qr) qr = new QRCode($("qr"), { text: uri, width: 132, height: 132, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+      else { qr.clear(); qr.makeCode(uri); }
+    } catch (e) { $("qr").style.display = "none"; }
+  }
+  function pickAmount(btn) {
+    if (!btn) return;
+    document.querySelectorAll(".amounts button").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+    btn.setAttribute("aria-pressed", "true");
+    tipAmt = btn.getAttribute("data-amt"); setPending(); renderTip(); $("tstatus").textContent = "";
+  }
+  document.querySelectorAll(".amounts button").forEach(function (b) { b.addEventListener("click", function () { pickAmount(b); }); });
+  $("openw").addEventListener("click", function () { setPending(); $("tstatus").textContent = "After you send, come back here and press the check button."; });
+  $("copy").addEventListener("click", function () {
+    setPending();
+    try { navigator.clipboard.writeText(NANO_ADDRESS).then(function () { $("tstatus").textContent = "Copied."; }, fallbackSelect); } catch (e) { fallbackSelect(); }
+    function fallbackSelect() {
+      const r = document.createRange(); r.selectNodeContents($("addr")); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      $("tstatus").textContent = "Address selected. Press copy on your device.";
+    }
+  });
+  function rpc(body) {
+    let i = 0;
+    return new Promise(function (resolve, reject) {
+      (function next2() {
+        if (i >= RPCS.length) { reject(new Error("unreachable")); return; }
+        const url = RPCS[i++], ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 6000);
+        fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal })
+          .then(function (r) { return r.json(); }).then(function (j) { clearTimeout(t); resolve(j); }).catch(function () { clearTimeout(t); next2(); });
+      })();
+    });
+  }
+  async function findTip(min, since) {
+    const claimed = jget("fe-claimed", []), need = BigInt(toRaw(min));
+    let reachable = false;
+    try {
+      const h = await rpc({ action: "account_history", account: NANO_ADDRESS, count: "60" });
+      reachable = true;
+      if (h && Array.isArray(h.history)) {
+        for (const b of h.history) {
+          if (b.type !== "receive" || claimed.indexOf(b.hash) >= 0) continue;
+          const ts = +b.local_timestamp; if (ts > 0 && ts * 1000 < since - 120000) continue;
+          if (BigInt(b.amount) >= need) return { ok: true, hash: b.hash, amount: b.amount };
+        }
+      }
+    } catch (e) {}
+    for (const cmd of ["receivable", "pending"]) {
+      try {
+        const p = await rpc({ action: cmd, account: NANO_ADDRESS, count: "60", threshold: need.toString(), source: "true" });
+        reachable = true; if (p && p.error) continue;
+        const bl = p && p.blocks;
+        if (bl && typeof bl === "object") {
+          for (const hsh in bl) { if (claimed.indexOf(hsh) >= 0) continue; const v = bl[hsh], amt = typeof v === "object" ? v.amount : v; if (BigInt(amt) >= need) return { ok: true, hash: hsh, amount: amt }; }
+        }
+        break;
+      } catch (e) {}
+    }
+    return { ok: false, reachable: reachable };
+  }
+  function creditTip(hash, amountRaw) {
+    const claimed = jget("fe-claimed", []); claimed.push(hash); lsSet("fe-claimed", JSON.stringify(claimed.slice(-80)));
+    const xno = Number(BigInt(amountRaw)) / 1e30;
+    shards += Math.round(xno * SHARDS_PER_XNO);
+    renderAll();
+    lsSet("fe-tip", "");
+    $("tstatus").textContent = "Thank you! Genesis shards credited.";
+  }
+  async function runCheck(tries, silent) {
+    if (checking) return;
+    const pend = jget("fe-tip", null);
+    if (!pend || !pend.amt) { if (!silent) $("tstatus").textContent = "Pick an amount first."; return; }
+    checking = true; $("check").disabled = true;
+    if (!silent) $("tstatus").textContent = "Checking the Nano network…";
+    let res = { ok: false, reachable: false };
+    for (let i = 0; i < tries; i++) { res = await findTip(pend.amt, pend.ts); if (res.ok) break; if (i < tries - 1) await new Promise(function (r) { setTimeout(r, 4000); }); }
+    checking = false; $("check").disabled = false;
+    if (res.ok) creditTip(res.hash, res.amount);
+    else if (!silent) $("tstatus").textContent = res.reachable ? "Not seen yet. Transfers take a few seconds, so press the check button again in a moment." : "Couldn't reach the Nano network from here. Try again shortly.";
+  }
+  $("check").addEventListener("click", function () { runCheck(8, false); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && jget("fe-tip", null)) runCheck(4, true); });
+
+  // ---------- go ----------
+  applyOfflineProgress();
+  renderTip(); renderAll();
+})();
+</script>
+</body>
+</html>
